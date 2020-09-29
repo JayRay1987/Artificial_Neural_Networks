@@ -1,0 +1,40 @@
+url = 'https://raw.githubusercontent.com/JayRay1987/MLwR/master/Machine%20Learning%20with%20R%20(3rd%20Ed.)/Chapter07/concrete.csv'
+concrete <- read.csv(url)
+str(concrete)
+#normalise function
+normalise <- function(x) {
+  return((x-min(x)) / (max(x) - min(x)))
+}
+concrete.norm <- as.data.frame(lapply(concrete, normalise))
+#check that it has worked
+summary(concrete.norm$strength)
+summary(concrete.norm$cement)
+summary(concrete.norm$slag)
+#will need to convert back after to return to original units
+#train and test data sets
+concrete.norm_train <- concrete.norm[1:773,]
+concrete.norm_test <- concrete.norm[774:1030,]
+#install packages
+install.packages("neuralnet")
+library(neuralnet)
+#build the model
+concrete_model <- neuralnet(strength ~ cement + slag + ash + water + superplastic + coarseagg + fineagg + age, data = concrete.norm_train, hidden = 2)
+#plot the model
+plot(concrete_model)
+#model the results
+#compute returns two components $neurons, which stores the neurons for each layer in the
+#network, and $net.result, which stores the predicted values.
+model_results <- compute(concrete_model, concrete.norm_test[1:8])
+predicted_strength <- model_results$net.result
+#to measure the accuracy of the model we use a correlation between the predicted strength 
+#values and the true value.
+cor(predicted_strength, concrete.norm_test$strength)
+#a strong correlation between the predicted and true values when we used two hidden layers.
+#to improve the model we can add more hidden layers.
+concrete_model2 <- neuralnet(strength ~ cement + slag + ash + water + superplastic + coarseagg + fineagg + age, data = concrete.norm_train, hidden = 5)
+#plot the neural network
+plot(concrete_model2)
+model_results2 <- compute(concrete_model2, concrete.norm_test[1:8])
+predicted_strength2 <- model_results2$net.result
+cor(predicted_strength2, concrete.norm_test$strength)
+#an improvement from the previous model with hidden layers of 2.
